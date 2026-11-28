@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl"><head>
-<!-- adm-version:6 -->
+<!-- adm-version:7 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17110f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="دعوات">
@@ -165,6 +165,16 @@ nav.tabs button.on:before{content:"";position:absolute;top:-5px;left:30%;right:3
 .ph6 button.tx{aspect-ratio:auto;min-height:54px;padding:6px 2px;color:var(--tx)}
 .ph6 button.tx.on{background:rgba(217,140,162,.14)}
 .row:has(>.btn.grow){flex-wrap:wrap}.row>.btn.grow{flex:1 1 auto}
+
+.save{bottom:var(--navh,74px);padding:0}
+.save .in{max-width:none;margin:0;border-radius:0;border:0;border-top:1px solid var(--line);background:rgba(23,17,15,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:none;padding:8px 16px;min-height:52px}
+.dirty{font-size:13.5px;color:var(--mu);display:flex;align-items:center;gap:8px}
+.dirty:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--wait);flex:none}
+.lnk{color:var(--mu);font-size:13.5px;padding:8px 10px}
+.btn.full{width:100%}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.trio .btn{padding:0 6px;gap:5px}
+.pk .tw{position:relative}.pk .ck2{position:absolute;top:6px;inset-inline-start:6px;width:22px;height:22px;border-radius:50%;background:var(--rose2);color:#fff;font-style:normal;font-size:13px;display:grid;place-items:center}
 </style></head>
 <body>
 <div id="app"></div>
@@ -431,9 +441,10 @@ function render() {
   var main = h("main", { class: "wrap" });
   main.appendChild(ST.tab === "pub" ? pubView() : ST.tab === "guests" ? guestsView() : mineView());
   app.appendChild(main);
-  if (dirty() && ST.tab === "pub") app.appendChild(h("div", { class: "save" }, h("div", { class: "in" }, h("span", { class: "grow", text: "لديك تعديلات غير منشورة" }), h("button", { class: "btn ghost sm", text: "تراجع", onclick: function () { ST.cfg = JSON.parse(ST.saved); render(); } }), h("button", { class: "btn gold sm", text: "حفظ ونشر", onclick: saveCfg }))));
+  if (dirty() && ST.tab === "pub") app.appendChild(h("div", { class: "save" }, h("div", { class: "in" }, h("span", { class: "grow dirty", text: "تعديلات غير منشورة" }), h("button", { class: "lnk", text: "تراجع", onclick: function () { ST.cfg = JSON.parse(ST.saved); render(); } }), h("button", { class: "btn sm", text: "حفظ ونشر", onclick: saveCfg }))));
   app.appendChild(h("nav", { class: "tabs" }, h("div", { class: "wrap" }, tabBtn("pub", "النشر", "send"), tabBtn("guests", "الضيوف", "users"), ST.conn.staff ? null : tabBtn("mine", "دعواتي", "mail"))));
   window.scrollTo(0, y);
+  var nv = $("nav.tabs"); document.documentElement.style.setProperty("--navh", (nv ? nv.offsetHeight : 0) + "px");
   syncSide();
 }
 function tabBtn(id, t, i) { return h("button", { class: ST.tab === id ? "on" : "", onclick: function () { ST.tab = id; ST.menu = false; render(); window.scrollTo(0, 0); if (id === "guests") loadState(); } }, ic(i), t); }
@@ -544,9 +555,9 @@ function pubView() {
   if (c.priv) w.appendChild(h("div", { class: "card" }, h("h3", { text: "دعوة خاصة 🔒" }), h("p", { class: "mu", style: "margin:0 0 10px", text: "الرابط العام متوقف: لا تفتح الدعوة إلا بالرابط الشخصي لكل ضيف. أضف ضيوفك وأرسل لكل واحد رابطه." }),
     h("div", { class: "row" }, h("button", { class: "btn gold grow", onclick: function () { ST.tab = "guests"; render(); loadState(); } }, ic("users"), "الضيوف وروابطهم"), h("button", { class: "btn ghost grow", onclick: preview }, ic("eye"), "معاينة"))));
   else w.appendChild(h("div", { class: "card" }, h("h3", { text: "شارك الدعوة" }), h("p", { class: "mu", style: "margin:0 0 8px", text: "هذا الرابط العام للدعوة. لكل ضيف رابط باسمه من تبويب الضيوف." }), h("div", { class: "linkbox", text: link }),
-    h("div", { class: "row", style: "margin-top:10px" }, h("button", { class: "btn grow", onclick: function () { copyText(waText(null)); } }, ic("copy"), "نسخ رسالة الدعوة"), h("button", { class: "btn ghost grow", onclick: function () { if (navigator.share) navigator.share({ title: c.groom + " و" + c.bride, text: waText(null) }).catch(function () {}); else copyText(waText(null)); } }, ic("share"), "مشاركة"), h("button", { class: "btn ghost grow", onclick: preview }, ic("eye"), "معاينة")),
-    h("div", { class: "row", style: "margin-top:8px" }, h("button", { class: "btn ghost sm", text: "نسخ الرابط فقط", onclick: function () { copyText(link); } })),
-    h("div", { class: "row", style: "margin-top:10px" }, h("button", { class: "btn gold grow", onclick: function () { ST.tab = "guests"; render(); loadState(); } }, ic("users"), "أضف دعوة باسم كل ضيف"))));
+    h("button", { class: "btn full", style: "margin-top:10px", onclick: function () { copyText(waText(null)); toast("نُسخت الرسالة"); } }, ic("copy"), "نسخ رسالة الدعوة"),
+    h("div", { class: "trio" }, h("button", { class: "btn ghost sm", onclick: function () { if (navigator.share) navigator.share({ title: c.groom + " و" + c.bride, text: waText(null) }).catch(function () {}); else copyText(waText(null)); } }, ic("share"), "مشاركة"), h("button", { class: "btn ghost sm", onclick: preview }, ic("eye"), "معاينة"), h("button", { class: "btn ghost sm", onclick: function () { copyText(link); toast("نُسخ الرابط"); } }, ic("copy"), "الرابط")),
+    h("button", { class: "btn ghost full", style: "margin-top:8px", onclick: function () { ST.tab = "guests"; render(); loadState(); } }, ic("users"), "أضف دعوة باسم كل ضيف")));
   w.appendChild(h("div", { class: "card" }, h("h3", { text: "كيف تصل دعوتك على واتساب" }), h("div", { class: "bubble", text: waText({ id: "xxxx", name: "أم خالد" }) }), h("button", { class: "btn ghost sm", text: "تعديل الرسالة", onclick: editWa })));
   w.appendChild(h("h2", { text: "تعديل الدعوة" }));
   w.appendChild(h("p", { class: "mu", style: "margin-top:-4px", text: "عدّل أي تفصيل في أي وقت ثم اضغط «حفظ ونشر»: يصل التعديل لكل الضيوف على نفس الرابط دون إعادة إرسال." }));
@@ -561,7 +572,7 @@ function editWa() {
   document.body.appendChild(md);
 }
 function preview() {
-  var f = h("iframe", { class: "phone", src: ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "pv=1" });
+  var f = h("iframe", { class: "phone", src: ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "pv=1&t=" + Date.now() });
   function onMsg(ev) { if (ev.data && ev.data.type === "ready") { f.contentWindow.postMessage({ type: "cfg", cfg: ST.cfg, guest: ST.guests[0] ? ST.guests[0].name : "" }, "*"); } }
   window.addEventListener("message", onMsg);
   var md = h("div", { class: "modal", onclick: function (e) { if (e.target === md) { md.remove(); window.removeEventListener("message", onMsg); } } }, h("div", { class: "box" }, h("div", { class: "row", style: "margin-bottom:8px;justify-content:space-between" }, h("b", { text: "معاينة بتعديلاتك الحالية" }), h("button", { class: "btn ghost sm", text: "إغلاق", onclick: function () { md.remove(); window.removeEventListener("message", onMsg); } })), f));
@@ -616,25 +627,26 @@ var INTROS = [["envelope", "الظرف الملكي", "💌"], ["door", "أبو�
 var PRESETS = [["ملكي كلاسيكي", "classic", "curtain", "silk"], ["وردي رومانسي", "blush", "floral", "floral"], ["أخضر هادئ", "sage", "arch", "waves"], ["كحلي فخم", "navy", "frame", "stars"], ["زمردي عربي", "emerald", "geo", "arab"], ["بنفسجي ناعم", "lavender", "minimal", "dots"], ["عنابي فوانيس", "burgundy", "lantern", "marble"], ["لؤلؤي", "pearl", "arch", "silk"]];
 function sectionDesign() {
   var c = ST.cfg;
-  return acc("design", "التصميم والخلفية", THEMES[c.theme] ? THEMES[c.theme][0] : "", function () {
+  return acc("design", "التصميم", (PACKS.filter(function (p) { return p[2] === c.introImg && p[3] === c.bgPhoto; })[0] || ["مخصص"])[0], function () {
     var th = h("div", { class: "themes" }), hs = h("div", { class: "chips" }), bs = h("div", { class: "chips" });
     Object.keys(THEMES).forEach(function (k) { var t = THEMES[k]; th.appendChild(h("button", { class: c.theme === k ? "on" : "", onclick: function () { c.theme = k; render(); } }, h("i", { style: "background:linear-gradient(135deg," + t[2] + " 50%," + t[1] + " 50%)" }), t[0])); });
     Object.keys(HEROES).forEach(function (k) { hs.appendChild(h("button", { class: "chip" + (c.hero === k ? " on" : ""), text: HEROES[k], onclick: function () { c.hero = k; render(); } })); });
     Object.keys(BGS).forEach(function (k) { bs.appendChild(h("button", { class: "chip" + (c.bg === k ? " on" : ""), text: BGS[k], onclick: function () { c.bg = k; render(); } })); });
-    var pre = h("div", { class: "pre" });
-    PRESETS.forEach(function (p) { var t = THEMES[p[1]]; pre.appendChild(h("button", { class: c.theme === p[1] && c.hero === p[2] && c.bg === p[3] ? "on" : "", onclick: function () { c.theme = p[1]; c.hero = p[2]; c.bg = p[3]; render(); } }, h("div", { class: "th", style: "background:linear-gradient(180deg,#fff," + t[1] + "55);color:" + t[1] }, h("small", { text: HEROES[p[2]] }), h("b", { text: "عمار & ضحى" }), h("i", { style: "background:" + t[1] }), h("small", { text: BGS[p[3]] })), h("span", { text: p[0] }))); });
     var cf = h("input", { type: "file", accept: "image/*", onchange: function () { var f = cf.files[0]; if (f) shrink(f, 1100, function (d) { c.cover = d; render(); toast("أُضيف الغلاف"); }, 150000); } });
     var kf = h("input", { type: "file", accept: "image/*", onchange: function () { var f = kf.files[0]; if (f) shrink(f, 360, function (d) { c.corner = d; render(); toast("أُضيفت الزاوية"); }, 60000); } });
     function rm(k) { return c[k] ? h("div", { class: "row", style: "margin-top:6px" }, h("span", { class: "mu", text: "مرفوعة ✓" }), h("button", { class: "btn red sm", text: "إزالة", onclick: function () { c[k] = ""; render(); } })) : null; }
-    var ip = h("div", { class: "pre" });
-    INTROS.forEach(function (x) { ip.appendChild(h("button", { class: (c.intro || "envelope") === x[0] ? "on" : "", onclick: function () { c.intro = x[0]; render(); } }, h("div", { class: "th", style: "height:64px;font-size:30px;font-family:inherit", text: x[2] }), h("span", { text: x[1] }))); });
     var pk = h("div", { class: "pk" });
-    PACKS.forEach(function (p) { pk.appendChild(h("button", { class: c.introImg === p[2] && c.bgPhoto === p[3] && c.theme === p[1] ? "on" : "", onclick: function () { c.introImg = p[2]; c.bgPhoto = p[3]; c.theme = p[1]; c.cover = ""; render(); } }, h("div", { class: "tw" }, h("img", { src: THUMBS[p[2]] }), h("img", { src: THUMBS[p[3]] })), h("span", { text: p[0] }))); });
-    var pi = h("div", { class: "ph6" }); IN_IMGS.forEach(function (k) { pi.appendChild(h("button", { class: c.introImg === k ? "on" : "", onclick: function () { c.introImg = k; render(); } }, h("img", { src: THUMBS[k] }))); });
-    pi.appendChild(h("button", { class: "tx" + (!c.introImg ? " on" : ""), text: "بدون صورة", onclick: function () { c.introImg = ""; render(); } }));
+    PACKS.forEach(function (p) { var on = c.introImg === p[2] && c.bgPhoto === p[3] && c.theme === p[1]; pk.appendChild(h("button", { class: on ? "on" : "", onclick: function () { c.introImg = p[2]; c.bgPhoto = p[3]; c.theme = p[1]; c.cover = ""; c.intro = "envelope"; render(); } }, h("div", { class: "tw" }, h("img", { src: THUMBS[p[2]] }), h("img", { src: THUMBS[p[3]] }), on ? h("i", { class: "ck2", text: "✓" }) : null), h("span", { text: p[0] }))); });
+    var pi = h("div", { class: "ph6" }); IN_IMGS.forEach(function (k) { pi.appendChild(h("button", { class: c.introImg === k ? "on" : "", onclick: function () { c.introImg = k; c.intro = "envelope"; render(); } }, h("img", { src: THUMBS[k] }))); });
+    pi.appendChild(h("button", { class: "tx" + (!c.introImg ? " on" : ""), text: "بدون", onclick: function () { c.introImg = ""; render(); } }));
     var pb = h("div", { class: "ph6" }); BG_IMGS.forEach(function (k) { pb.appendChild(h("button", { class: c.bgPhoto === k ? "on" : "", onclick: function () { c.bgPhoto = k; render(); } }, h("img", { src: THUMBS[k] }))); });
     pb.appendChild(h("button", { class: "tx" + (!c.bgPhoto ? " on" : ""), text: "بدون", onclick: function () { c.bgPhoto = ""; render(); } }));
-    return [h("label", { class: "f", text: "أغلفة جاهزة (شاشة البداية + خلفية القاعة + الألوان بضغطة واحدة)" }), pk, h("label", { class: "f", text: "شاشة البداية — صورة" }), pi, h("label", { class: "f", text: "خلفية القاعة بعد فتح الدعوة" }), pb, h("label", { class: "f", text: "أو شاشة بداية مرسومة (تُستخدم إذا اخترت «بدون صورة»)" }), ip, h("label", { class: "f", text: "قوالب جاهزة (لون + غلاف + خلفية)" }), pre, h("label", { class: "f", text: "صورة غلاف كبيرة (تحل محل رسم الغلاف)" }), cf, rm("cover"), h("label", { class: "f", text: "زخرفة زاوية من تصميمك (صورة شفافة PNG تتكرر في الزوايا الأربع)" }), kf, rm("corner"), h("label", { class: "f", text: "الألوان" }), th, h("label", { class: "f", text: "شكل الغلاف" }), hs, h("label", { class: "f", text: "نقش الخلفية" }), bs, fld("صورة خلفية مخصصة (رابط، اختياري)", function () { return c.bgImg; }, function (v) { c.bgImg = v; }, "url", "https://…")];
+    var out = [h("p", { class: "mu", style: "margin:4px 0 0", text: "اختر غلافاً واحداً فتتنسق شاشة البداية والخلفية والألوان معاً." }), pk,
+      h("button", { class: "btn ghost sm", style: "margin-top:6px", text: ST.adv ? "إخفاء التخصيص" : "تخصيص متقدم (اختيار كل عنصر وحده)", onclick: function () { ST.adv = !ST.adv; render(); } })];
+    if (ST.adv) out = out.concat([h("label", { class: "f", text: "صورة شاشة البداية" }), pi, h("label", { class: "f", text: "خلفية القاعة بعد فتح الدعوة" }), pb, h("label", { class: "f", text: "ألوان الخطوط والأزرار" }), th,
+      h("label", { class: "f", text: "صورة غلاف من عندك (تحل محل القاعة)" }), cf, rm("cover"), h("label", { class: "f", text: "زخرفة زاوية (PNG شفاف)" }), kf, rm("corner"),
+      h("label", { class: "f", text: "شكل الغلاف بدون صور" }), hs, h("label", { class: "f", text: "نقش الخلفية بدون صور" }), bs]);
+    return out;
   });
 }
 function shrink(file, max, cb, lim) {
@@ -758,7 +770,7 @@ function syncSide() {
   var c = JSON.parse(JSON.stringify(ST.cfg)); c.autoscroll = false; var key = JSON.stringify(c);
   if (key === ST.pvKey && side.firstChild) return; ST.pvKey = key;
   side.textContent = "";
-  var f = h("iframe", { class: "fr", src: ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "pv=1&open=1" });
+  var f = h("iframe", { class: "fr", src: ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "pv=1&open=1&t=" + Date.now() });
   function onMsg(ev) { if (ev.source === f.contentWindow && ev.data && ev.data.type === "ready") { f.contentWindow.postMessage({ type: "cfg", cfg: c, guest: ST.guests[0] ? ST.guests[0].name : "" }, "*"); window.removeEventListener("message", onMsg); } }
   window.addEventListener("message", onMsg);
   side.appendChild(h("div", { class: "row" }, h("b", { text: "معاينة حيّة" }), h("button", { class: "btn ghost sm", text: "تحديث", onclick: function () { ST.pvKey = ""; syncSide(); } })));

@@ -341,7 +341,7 @@ svg stop[stop-color="#efe4cd"] { stop-color: var(--bg-d); }
 
 /* ---- photo intro / photo backdrop ---- */
 .stage[data-intro="photo"]{justify-content:flex-start;background:#111;overflow:hidden;gap:0}
-.stage[data-intro="photo"] .env-wrap,.stage[data-intro="photo"] .alt,.stage[data-intro="photo"] .rule{display:none}
+.stage[data-intro="photo"] .env-wrap,.stage[data-intro="photo"] .alt,.stage[data-intro="photo"] .rule{display:none!important}
 .pimg{position:absolute;inset:0;z-index:0;overflow:hidden;background:#111 center/cover}
 .pimg img{position:absolute;max-width:none;display:block;transition:transform 2.6s cubic-bezier(.5,0,.2,1),filter 2.6s ease;will-change:transform}
 .pscr{position:absolute;inset:0;z-index:1;pointer-events:none}
@@ -909,7 +909,7 @@ window.__boot = function (REMOTE) {
   var INTRO = CONFIG.intro || "envelope", introFx = INTRO !== "envelope" && INTRO !== "none";
   (function () {
     var st = $("#stage"); st.setAttribute("data-intro", INTRO);
-    if (!introFx) return;
+    if (!introFx || PH_IN[CONFIG.introImg]) { if (PH_IN[CONFIG.introImg]) st.setAttribute("data-intro", "photo"); return; }
     var mono = ((CONFIG.groom || "")[0] || "") + "&" + ((CONFIG.bride || "")[0] || ""), nm = (CONFIG.groom || "") + " & " + (CONFIG.bride || "");
     var tc = '<div class="tc"><small>حفل زفاف</small><b>' + nm.replace(/</g, "&lt;") + '</b></div>';
     var k = { door: '<div class="pn l"></div><div class="pn r"></div><div class="knob gold l"></div><div class="knob gold r"></div>' + tc,
