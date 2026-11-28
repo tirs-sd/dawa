@@ -561,7 +561,7 @@ function editWa() {
   document.body.appendChild(md);
 }
 function preview() {
-  var f = h("iframe", { class: "phone", src: ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "pv=1&t=" + Date.now() });
+  var f = h("iframe", { class: "phone", src: ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "pv=1" });
   function onMsg(ev) { if (ev.data && ev.data.type === "ready") { f.contentWindow.postMessage({ type: "cfg", cfg: ST.cfg, guest: ST.guests[0] ? ST.guests[0].name : "" }, "*"); } }
   window.addEventListener("message", onMsg);
   var md = h("div", { class: "modal", onclick: function (e) { if (e.target === md) { md.remove(); window.removeEventListener("message", onMsg); } } }, h("div", { class: "box" }, h("div", { class: "row", style: "margin-bottom:8px;justify-content:space-between" }, h("b", { text: "معاينة بتعديلاتك الحالية" }), h("button", { class: "btn ghost sm", text: "إغلاق", onclick: function () { md.remove(); window.removeEventListener("message", onMsg); } })), f));
@@ -758,7 +758,7 @@ function syncSide() {
   var c = JSON.parse(JSON.stringify(ST.cfg)); c.autoscroll = false; var key = JSON.stringify(c);
   if (key === ST.pvKey && side.firstChild) return; ST.pvKey = key;
   side.textContent = "";
-  var f = h("iframe", { class: "fr", src: ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "pv=1&open=1&t=" + Date.now() });
+  var f = h("iframe", { class: "fr", src: ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "pv=1&open=1" });
   function onMsg(ev) { if (ev.source === f.contentWindow && ev.data && ev.data.type === "ready") { f.contentWindow.postMessage({ type: "cfg", cfg: c, guest: ST.guests[0] ? ST.guests[0].name : "" }, "*"); window.removeEventListener("message", onMsg); } }
   window.addEventListener("message", onMsg);
   side.appendChild(h("div", { class: "row" }, h("b", { text: "معاينة حيّة" }), h("button", { class: "btn ghost sm", text: "تحديث", onclick: function () { ST.pvKey = ""; syncSide(); } })));

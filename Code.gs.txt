@@ -1,0 +1,195 @@
+/**
+ * خادم الدعوات — Google Apps Script
+ * الصق هذا الملف كاملاً في (إضافات ← Apps Script) داخل جدول Google جديد،
+ * غيّر المفتاح السري أدناه، ثم: نشر ← نشر كتطبيق ويب ← الوصول: أي شخص.
+ */
+var ADMIN_KEY = "غيّر-هذا-المفتاح-السري";   // ← مفتاح لوحة العريس (اختر كلمة طويلة)
+var CHUNK = 45000;                           // حد الخلية في Google Sheets = 50000
+
+function out_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+function sheet_(name, head) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), s = ss.getSheetByName(name);
+  if (!s) { s = ss.insertSheet(name); s.appendRow(head); }
+  return s;
+}
+function S_INV() { return sheet_("Invitations", ["id", "updated", "json..."]); }
+function S_GST() { return sheet_("Guests", ["inv", "gid", "name", "phone", "grp", "opened", "arrived"]); }
+function S_RSP() { return sheet_("Responses", ["ts", "inv", "gid", "name", "status", "count", "msg"]); }
+
+function S_STF() { return sheet_("Staff", ["inv", "key"]); }
+function staffKey_(inv) { var v = S_STF().getDataRange().getValues(); for (var r = 1; r < v.length; r++) if (String(v[r][0]) === inv) return String(v[r][1]); return ""; }
+function canInv_(k, inv) { if (isAdmin_(k)) return true; var sk = staffKey_(String(inv || "")); return !!sk && String(k || "") === sk; }
+function newKey_() { var c = "abcdefghjkmnpqrstuvwxyz23456789", o = ""; for (var i = 0; i < 16; i++) o += c.charAt(Math.floor(Math.random() * c.length)); return o; }
+function isAdmin_(k) { return String(k || "") === ADMIN_KEY && ADMIN_KEY.indexOf("غيّر") !== 0; }
+function clip_(v, n) { return String(v == null ? "" : v).slice(0, n); }
+function validId_(i) { return /^[a-z0-9][a-z0-9\-]{1,38}[a-z0-9]$/.test(String(i || "")); }
+
+function readInv_(id) {
+  var s = S_INV(), v = s.getDataRange().getValues();
+  for (var r = 1; r < v.length; r++) {
+    if (String(v[r][0]) === id) {
+      var js = "";
+      for (var c = 2; c < v[r].length; c++) js += String(v[r][c] || "");
+      var cfg = null; try { cfg = JSON.parse(js); } catch (e) {}
+      return { row: r + 1, updated: String(v[r][1]), cfg: cfg };
+    }
+  }
+  return null;
+}
+function writeInv_(id, cfg) {
+  var s = S_INV(), js = JSON.stringify(cfg), parts = [], i, now = String(Date.now());
+  for (i = 0; i < js.length; i += CHUNK) parts.push(js.slice(i, i + CHUNK));
+  var row = [id, now].concat(parts), ex = readInv_(id);
+  if (ex) {
+    s.getRange(ex.row, 1, 1, Math.max(s.getLastColumn(), row.length)).clearContent();
+    s.getRange(ex.row, 1, 1, row.length).setValues([row]);
+  } else { s.appendRow(row); }
+  return now;
+}
+
+function guestsOf_(inv) {
+  var v = S_GST().getDataRange().getValues(), a = [];
+  for (var r = 1; r < v.length; r++) if (String(v[r][0]) === inv) a.push({ id: String(v[r][1]), name: String(v[r][2]), phone: String(v[r][3]), grp: String(v[r][4]), opened: String(v[r][5] || ""), arrived: String(v[r][6] || "") });
+  return a;
+}
+function latestResp_(inv) {
+  var v = S_RSP().getDataRange().getValues(), m = {};
+  for (var r = 1; r < v.length; r++) {
+    if (String(v[r][1]) !== inv) continue;
+    var key = String(v[r][2]) || ("n:" + String(v[r][3]).toLowerCase());
+    m[key] = { ts: Number(v[r][0]), gid: String(v[r][2]), name: String(v[r][3]), status: String(v[r][4]), count: Number(v[r][5]) || 0, msg: String(v[r][6] || "") };
+  }
+  return m;
+}
+
+function doGet(e) {
+  var p = (e && e.parameter) || {}, a = p.a || "get";
+  try {
+    if (a === "ping") return out_({ ok: true, admin: isAdmin_(p.k), inv: p.i ? canInv_(p.k, p.i) : false });
+    if (a === "get") {
+      var id = String(p.i || ""), inv = readInv_(id);
+      if (!inv || !inv.cfg) return out_({ ok: false, err: "notfound" });
+      var res = { ok: true, updated: inv.updated };
+      if (inv.cfg.priv) {
+        var okg = false;
+        if (p.g) { var gl0 = guestsOf_(id); for (var q0 = 0; q0 < gl0.length; q0++) if (gl0[q0].id === p.g) okg = true; }
+        if (!okg) return out_({ ok: false, err: "private" });
+      }
+      if (p.v && String(p.v) === inv.updated) res.same = true; else res.cfg = inv.cfg;
+      if (p.g) {
+        var gs = guestsOf_(id), me = null, k;
+        for (k = 0; k < gs.length; k++) if (gs[k].id === p.g) me = gs[k];
+        if (me) {
+          if (!me.opened) {
+            var s = S_GST(), v = s.getDataRange().getValues();
+            for (var r = 1; r < v.length; r++) if (String(v[r][0]) === id && String(v[r][1]) === p.g) { s.getRange(r + 1, 6).setValue(Date.now()); break; }
+          }
+          var lr = latestResp_(id)[p.g];
+          res.guest = { name: me.name, status: lr ? lr.status : "", count: lr ? lr.count : 0, msg: lr ? lr.msg : "" };
+        }
+      }
+      return out_(res);
+    }
+    if (a === "wishes") {
+      var wid = String(p.i || ""), wi = readInv_(wid);
+      if (!wi || !wi.cfg || wi.cfg.wall === false) return out_({ ok: true, list: [] });
+      var wm = latestResp_(wid), wl = [], wk;
+      for (wk in wm) if (wm[wk].msg) wl.push({ name: wm[wk].name, msg: wm[wk].msg, ts: wm[wk].ts });
+      wl.sort(function (x, y) { return y.ts - x.ts; });
+      return out_({ ok: true, list: wl.slice(0, 40) });
+    }
+    if ((a === "full" || a === "state") && canInv_(p.k, p.i)) { /* staff or admin */ }
+    else if (!isAdmin_(p.k)) return out_({ ok: false, err: "auth" });
+    if (a === "staff") { var sk0 = staffKey_(String(p.i || "")); return out_({ ok: true, key: sk0 }); }
+    if (a === "list") {
+      var vs = S_INV().getDataRange().getValues(), list = [], r2;
+      for (r2 = 1; r2 < vs.length; r2++) {
+        var js = ""; for (var c = 2; c < vs[r2].length; c++) js += String(vs[r2][c] || "");
+        var cf = {}; try { cf = JSON.parse(js); } catch (x) {}
+        var iid = String(vs[r2][0]), gl = guestsOf_(iid), lm = latestResp_(iid), yes = 0, no = 0, ppl = 0, kk;
+        for (kk in lm) { if (lm[kk].status === "yes") { yes++; ppl += lm[kk].count || 1; } else if (lm[kk].status === "no") no++; }
+        list.push({ id: iid, updated: String(vs[r2][1]), groom: cf.groom, bride: cf.bride, start: cf.start, theme: cf.theme, hero: cf.hero, guests: gl.length, yes: yes, no: no, people: ppl });
+      }
+      return out_({ ok: true, list: list });
+    }
+    if (a === "full") {
+      var iv = readInv_(String(p.i || ""));
+      return out_(iv ? { ok: true, cfg: iv.cfg, updated: iv.updated } : { ok: false, err: "notfound" });
+    }
+    if (a === "state") {
+      var iid2 = String(p.i || ""), g2 = guestsOf_(iid2), lm2 = latestResp_(iid2);
+      return out_({ ok: true, guests: g2, resp: lm2 });
+    }
+    return out_({ ok: false, err: "bad" });
+  } catch (err) { return out_({ ok: false, err: String(err) }); }
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+    var d = JSON.parse(e.postData.contents), a = d.a;
+    if (a === "rsvp") {
+      var inv = String(d.i || "");
+      if (!readInv_(inv)) return out_({ ok: false, err: "notfound" });
+      var st = d.status === "yes" ? "yes" : "no";
+      S_RSP().appendRow([Date.now(), inv, clip_(d.g, 20), clip_(d.name, 80), st, st === "yes" ? Math.max(1, Math.min(30, Number(d.count) || 1)) : 0, clip_(d.msg, 600)]);
+      return out_({ ok: true });
+    }
+    var id = String(d.i || "");
+    if (!(canInv_(d.k, id) && (a === "save" || a === "guests" || a === "checkin")) && !isAdmin_(d.k)) return out_({ ok: false, err: "auth" });
+    if (a === "staffset") {
+      if (!readInv_(id)) return out_({ ok: false, err: "notfound" });
+      var ss = S_STF(), vs = ss.getDataRange().getValues(), rr;
+      for (rr = vs.length; rr >= 2; rr--) if (String(vs[rr - 1][0]) === id) ss.deleteRow(rr);
+      var nk = d.off ? "" : newKey_(); if (nk) ss.appendRow([id, nk]);
+      return out_({ ok: true, key: nk });
+    }
+    if (a === "save") {
+      if (!validId_(id)) return out_({ ok: false, err: "badid" });
+      if (!isAdmin_(d.k) && !readInv_(id)) return out_({ ok: false, err: "auth" });
+      var upd = writeInv_(id, d.cfg);
+      return out_({ ok: true, updated: upd });
+    }
+    if (a === "del") {
+      var iv = readInv_(id);
+      if (iv) S_INV().deleteRow(iv.row);
+      [[S_GST(), 0], [S_RSP(), 1], [S_STF(), 0]].forEach(function (x) {
+        var v = x[0].getDataRange().getValues();
+        for (var r = v.length - 1; r >= 1; r--) if (String(v[r][x[1]]) === id) x[0].deleteRow(r + 1);
+      });
+      return out_({ ok: true });
+    }
+    if (a === "checkin") {
+      var sc = S_GST(), vc = sc.getDataRange().getValues();
+      for (var rc = 1; rc < vc.length; rc++) {
+        if (String(vc[rc][0]) === id && String(vc[rc][1]) === String(d.g)) {
+          var was = String(vc[rc][6] || "");
+          sc.getRange(rc + 1, 7).setValue(d.undo ? "" : (was || Date.now()));
+          var lr2 = latestResp_(id)[String(d.g)];
+          return out_({ ok: true, name: String(vc[rc][2]), already: !!was && !d.undo, status: lr2 ? lr2.status : "", count: lr2 ? lr2.count : 0 });
+        }
+      }
+      return out_({ ok: false, err: "noguest" });
+    }
+    if (a === "guests") {
+      var sg = S_GST(), vv = sg.getDataRange().getValues(), keep = [], old = {}, r3;
+      for (r3 = 1; r3 < vv.length; r3++) {
+        if (String(vv[r3][0]) === id) old[String(vv[r3][1])] = [vv[r3][5], vv[r3][6]];
+        else keep.push(vv[r3]);
+      }
+      var rows = (d.guests || []).slice(0, 2000).map(function (g) {
+        var o = old[String(g.id)] || ["", ""];
+        return [id, clip_(g.id, 20), clip_(g.name, 80), clip_(g.phone, 30), clip_(g.grp, 40), o[0] || "", o[1] || ""];
+      });
+      sg.clearContents(); sg.appendRow(["inv", "gid", "name", "phone", "grp", "opened", "arrived"]);
+      var all = keep.concat(rows);
+      if (all.length) sg.getRange(2, 1, all.length, 7).setValues(all.map(function (x) { while (x.length < 7) x.push(""); return x.slice(0, 7); }));
+      return out_({ ok: true, n: rows.length });
+    }
+    return out_({ ok: false, err: "bad" });
+  } catch (err) { return out_({ ok: false, err: String(err) }); }
+  finally { try { lock.releaseLock(); } catch (x) {} }
+}
