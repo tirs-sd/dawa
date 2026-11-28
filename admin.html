@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl"><head>
-<!-- adm-version:8 -->
+<!-- adm-version:9 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17110f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="دعوات">
@@ -889,9 +889,15 @@ function scanner() {
   }).catch(function (e) { say(e && e.name === "NotAllowedError" ? "لم يُسمح بالكاميرا. فعّلها للموقع من إعدادات المتصفح ثم أعد فتح الماسح، أو استخدم زر التصوير." : "تعذّر تشغيل الكاميرا. استخدم زر التصوير أو البحث بالاسم."); });
 }
 function verLine() {
-  var p = h("p", { class: "mu", style: "text-align:center;font-size:12px;margin:18px 0 6px", text: "إصدار اللوحة 8 · الخادم … · صفحة الدعوة …" });
-  aget("ping").then(function (r) { var v = r.ver || 1; p.textContent = "إصدار اللوحة 8 · الخادم " + v + (v < 3 ? " (قديم – حدّثه)" : " ✓") + " · صفحة الدعوة …"; if (v < 3) p.style.color = "#9a2f2f"; fetch(ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(), { cache: "no-store" }).then(function (x) { return x.text(); }).then(function (t) { var m = /inv-version:(\d+)/.exec(t), iv = m ? +m[1] : 0; p.textContent = "إصدار اللوحة 8 · الخادم " + v + (v < 3 ? " (قديم – حدّثه)" : " ✓") + " · صفحة الدعوة " + iv + (iv < 12 ? " (قديمة – ارفع index.html)" : " ✓"); if (iv < 12) p.style.color = "#9a2f2f"; }).catch(function () {}); }).catch(function () {});
-  return p;
+  var p = h("p", { class: "mu", style: "text-align:center;font-size:12px;margin:18px 0 6px", text: "إصدار اللوحة 9 · الخادم … · صفحة الدعوة …" });
+  aget("ping").then(function (r) { var v = r.ver || 1; p.textContent = "إصدار اللوحة 9 · الخادم " + v + (v < 3 ? " (قديم – حدّثه)" : " ✓") + " · صفحة الدعوة …"; if (v < 3) p.style.color = "#9a2f2f"; fetch(ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(), { cache: "no-store" }).then(function (x) { return x.text(); }).then(function (t) { var m = /inv-version:(\d+)/.exec(t), iv = m ? +m[1] : 0; p.textContent = "إصدار اللوحة 9 · الخادم " + v + (v < 3 ? " (قديم – حدّثه)" : " ✓") + " · صفحة الدعوة " + iv + (iv < 12 ? " (قديمة – ارفع index.html)" : " ✓"); if (iv < 12) p.style.color = "#9a2f2f"; }).catch(function () {}); }).catch(function () {});
+  var box = h("div", { style: "text-align:center" }, p, h("button", { class: "btn ghost sm", text: "فحص الاتصال بالخادم", onclick: function () {
+    var pre = h("pre", { style: "white-space:pre-wrap;direction:ltr;text-align:left;font-size:11px;word-break:break-all;margin:8px 0" }); pre.textContent = "جارٍ الفحص…"; box.appendChild(pre);
+    var u = apiUrl(), out = "رابط الخادم المستخدم: …" + u.slice(-34) + "\n\n";
+    function raw(a, q) { var x = new URL(u, location.href); x.searchParams.set("a", a); x.searchParams.set("k", ST.conn.k); for (var k in q || {}) x.searchParams.set(k, q[k]); return fetch(x.toString()).then(function (r) { return r.text(); }).then(function (t) { return a + " ← " + t.slice(0, 300); }).catch(function (e) { return a + " ← فشل الاتصال: " + e; }); }
+    raw("ping").then(function (t) { out += t + "\n\n"; return raw("staff", { i: ST.id }); }).then(function (t) { pre.textContent = out + t + "\n\nإن اختلف آخر الرابط عن رابط النشر في Apps Script فاللوحة تتصل بخادم آخر: اضغط «تغيير الخادم»."; });
+  } }), h("button", { class: "btn ghost sm", style: "margin-inline-start:6px", text: "تغيير الخادم", onclick: function () { if (confirm("الخروج وإعادة إدخال رابط الخادم؟")) { try { localStorage.removeItem("adm_conn"); localStorage.removeItem("adm_ep_override"); } catch (e) {} location.reload(); } } }));
+  return box;
 }
 function stat(cl, n, t) { return h("div", { class: "stat " + cl }, h("b", { text: String(n) }), h("small", { text: t })); }
 function addGuest() {
