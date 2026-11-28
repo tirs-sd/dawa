@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl"><head>
-<!-- adm-version:7 -->
+<!-- adm-version:8 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#17110f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="دعوات">
@@ -249,7 +249,7 @@ function latestResp_(inv) {
 function doGet(e) {
   var p = (e && e.parameter) || {}, a = p.a || "get";
   try {
-    if (a === "ping") return out_({ ok: true, admin: isAdmin_(p.k), inv: p.i ? canInv_(p.k, p.i) : false });
+    if (a === "ping") return out_({ ok: true, ver: 3, admin: isAdmin_(p.k), inv: p.i ? canInv_(p.k, p.i) : false });
     if (a === "get") {
       var id = String(p.i || ""), inv = readInv_(id);
       if (!inv || !inv.cfg) return out_({ ok: false, err: "notfound" });
@@ -466,7 +466,7 @@ function setupView() {
         var m = /\/macros\/s\/([A-Za-z0-9_\-]+)\/exec/.exec(u.value.trim());
         if (!m) { msg.hidden = false; msg.textContent = "الرابط غير صحيح. يجب أن يحتوي /macros/s/…/exec"; return; }
         ST.conn = { e: m[1], k: k.value.trim() }; msg.hidden = true;
-        aget("ping").then(function (r) { if (!r.ok) throw new Error("x"); if (!r.admin) { ST.conn = null; msg.hidden = false; msg.textContent = "المفتاح غير مطابق لما في السكربت، أو لم تغيّر القيمة الافتراضية."; return; } try { localStorage.setItem("adm_conn", JSON.stringify(ST.conn)); } catch (e) {} boot(); }).catch(function () { ST.conn = null; msg.hidden = false; msg.textContent = "تعذّر الاتصال. تأكد أن الوصول «أي شخص» وأنك نشرت نسخة جديدة."; });
+        aget("ping").then(function (r) { if (!r.ok) throw new Error("x"); ST.ver = r.ver || 1; if (!r.admin) { ST.conn = null; msg.hidden = false; msg.textContent = "المفتاح غير مطابق لما في السكربت، أو لم تغيّر القيمة الافتراضية."; return; } try { localStorage.setItem("adm_conn", JSON.stringify(ST.conn)); } catch (e) {} boot(); }).catch(function () { ST.conn = null; msg.hidden = false; msg.textContent = "تعذّر الاتصال. تأكد أن الوصول «أي شخص» وأنك نشرت نسخة جديدة."; });
       } }))));
 }
 
@@ -510,7 +510,7 @@ function boot() {
 }
 function checkHosted() {
   if (!/^https?:/.test(ST.base)) return;
-  fetch(ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (t) { var m = /inv-version:(\d+)/.exec(t); if (!m || +m[1] < 11) { ST.old = true; render(); } }).catch(function () {});
+  fetch(ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (t) { var m = /inv-version:(\d+)/.exec(t); if (!m || +m[1] < 12) { ST.old = true; render(); } }).catch(function () {});
 }
 function openInv(id, silent) {
   ST.menu = false;
@@ -563,6 +563,7 @@ function pubView() {
   w.appendChild(h("p", { class: "mu", style: "margin-top:-4px", text: "عدّل أي تفصيل في أي وقت ثم اضغط «حفظ ونشر»: يصل التعديل لكل الضيوف على نفس الرابط دون إعادة إرسال." }));
   [sectionCouple, sectionPlace, sectionProgram, sectionEvents, sectionDesign, sectionMedia, sectionGallery, sectionText, sectionExtras, sectionRsvp, sectionSlug].forEach(function (f) { if (f === sectionSlug && ST.conn.staff) return; w.appendChild(f()); });
   if (!ST.conn.staff) w.appendChild(staffCard());
+  w.appendChild(verLine());
   return w;
 }
 function editWa() {
@@ -718,7 +719,8 @@ function launchCard() {
 }
 function staffCard() {
   var box = h("div", { class: "card" }, h("h3", { text: "رابط متابعة لشخص آخر" }), h("p", { class: "mu", text: "أعطِ العميل أو منظّم الحفل رابطاً خاصاً بهذه الدعوة فقط: يتابع الضيوف والردود، يعدّل الدعوة، ويقرأ الباركود عند الباب، دون أن يرى دعواتك الأخرى." }));
-  if (!ST.stf || ST.stf.id !== ST.id) { ST.stf = { id: ST.id, key: null }; aget("staff", { i: ST.id }).then(function (r) { if (r.ok && ST.stf && ST.stf.id === ST.id) { ST.stf.key = r.key || ""; render(); } }); box.appendChild(h("p", { class: "mu", text: "…" })); return box; }
+  if (!ST.stf || ST.stf.id !== ST.id) { ST.stf = { id: ST.id, key: null }; aget("staff", { i: ST.id }).then(function (r) { if (!ST.stf || ST.stf.id !== ST.id) return; if (r.ok) ST.stf.key = r.key || ""; else ST.stf.err = true; render(); }).catch(function () { if (ST.stf) { ST.stf.err = true; render(); } }); box.appendChild(h("p", { class: "mu", text: "…" })); return box; }
+  if (ST.stf.err) { box.appendChild(h("p", { style: "color:#9a2f2f;font-weight:700;margin:8px 0", text: "الخادم لا يدعم روابط المتابعة بعد: كود Code.gs المنشور قديم." })); box.appendChild(h("p", { class: "mu", text: "افتح Apps Script ← امسح الكود القديم والصق ملف Code.gs الجديد ← غيّر ADMIN_KEY لمفتاحك ← نشر ← إدارة عمليات النشر ← قلم التعديل ← إصدار جديد ← نشر. بعدها أعد فتح هذه الصفحة." })); box.appendChild(h("button", { class: "btn ghost sm", text: "إعادة المحاولة", onclick: function () { ST.stf = null; render(); } })); return box; }
   if (ST.stf.key === null) { box.appendChild(h("p", { class: "mu", text: "…" })); return box; }
   function set(off) { apost({ a: "staffset", i: ST.id, off: off ? 1 : 0 }).then(function (r) { if (!r.ok) { toast("تعذّر", 1); return; } ST.stf.key = r.key; render(); toast(off ? "أُوقف الرابط" : "تم"); }); }
   if (ST.stf.key) {
@@ -835,11 +837,14 @@ function ticketModal(g) {
     h("div", { class: "row", style: "justify-content:center" }, h("button", { class: "btn", text: "حفظ كصورة", onclick: function () { var a = h("a", { href: cv.toDataURL("image/png"), download: "ticket-" + g.name + ".png" }); document.body.appendChild(a); a.click(); a.remove(); } }), h("button", { class: "btn ghost", text: "إغلاق", onclick: function () { md.remove(); } }))));
   document.body.appendChild(md);
 }
-function checkin(gid, undo) {
+var CK_ERR = { auth: "المفتاح أو رابط المتابعة غير صالح (جدّد الرابط من الحساب الرئيسي)", bad: "كود Code.gs المنشور قديم: الصق الجديد في Apps Script ثم انشر نسخة جديدة", noguest: "الضيف غير محفوظ على الخادم", notfound: "الدعوة غير موجودة على الخادم" };
+function guestsNow() { return apost({ a: "guests", i: ST.id, guests: ST.guests.map(function (g) { return { id: g.id, name: g.name, phone: g.phone, grp: g.grp }; }) }); }
+function checkin(gid, undo, again) {
   return apost({ a: "checkin", i: ST.id, g: gid, undo: !!undo }).then(function (r) {
-    if (r.ok) { var g = ST.guests.filter(function (x) { return x.id === gid; })[0]; if (g) g.arrived = undo ? "" : (g.arrived || String(Date.now())); } else toast("تعذّر التسجيل", 1);
-    return r;
-  }).catch(function () { toast("تعذّر الاتصال", 1); return { ok: false }; });
+    if (r && r.ok) { var g = ST.guests.filter(function (x) { return x.id === gid; })[0]; if (g) g.arrived = undo ? "" : (g.arrived || String(Date.now())); return r; }
+    if (r && r.err === "noguest" && !again) return guestsNow().then(function () { return checkin(gid, undo, true); });
+    var why = CK_ERR[r && r.err] || "رد غير متوقع من الخادم" + (r && r.err ? " (" + r.err + ")" : ""); toast(why, 1); return { ok: false, err: r && r.err, why: why };
+  }).catch(function () { toast("تعذّر الاتصال بالخادم. تحقق من الإنترنت ومن أن النشر «أي شخص»", 1); return { ok: false, why: "net" }; });
 }
 function scanner() {
   var out = h("div", { class: "card", style: "margin:10px 0;text-align:center" }, h("span", { class: "mu", text: "جارٍ تشغيل الكاميرا…" }));
@@ -853,7 +858,7 @@ function scanner() {
     if (!m || (mi && mi[1] !== ST.id)) { show("باركود غير تابع لهذه الدعوة", "bad"); return Promise.resolve(); }
     var g = ST.guests.filter(function (x) { return x.id === m[1]; })[0];
     if (!g) { show("الضيف غير موجود في القائمة، حدّث الضيوف", "bad"); return Promise.resolve(); }
-    return checkin(g.id, false).then(function (r) { if (!r.ok) return; var st = gstat(g); show((r.already ? "⚠ سُجّل دخوله مسبقاً: " : "✓ ") + g.name + (st && st.status === "yes" ? " · " + (st.count || 1) + " أشخاص" : " · لم يؤكد حضوره"), r.already ? "wait" : "ok"); });
+    return checkin(g.id, false).then(function (r) { if (!r.ok) { show("لم يُسجَّل: " + (r.why || "خطأ"), "bad"); return; } var st = gstat(g); show((r.already ? "⚠ سُجّل دخوله مسبقاً: " : "✓ ") + g.name + (st && st.status === "yes" ? " · " + (st.count || 1) + " أشخاص" : " · لم يؤكد حضوره"), r.already ? "wait" : "ok"); });
   }
   function decodeCanvas(src, w, hh) {
     var sc = Math.min(1, 900 / Math.max(w, hh)), cv = document.createElement("canvas"); cv.width = Math.round(w * sc); cv.height = Math.round(hh * sc);
@@ -882,6 +887,11 @@ function scanner() {
   navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }).then(function (s) {
     stream = s; vid.srcObject = s; var pl = vid.play(); if (pl && pl.catch) pl.catch(function () {}); say("الكاميرا تعمل · وجّهها نحو الباركود وثبّتها"); loop();
   }).catch(function (e) { say(e && e.name === "NotAllowedError" ? "لم يُسمح بالكاميرا. فعّلها للموقع من إعدادات المتصفح ثم أعد فتح الماسح، أو استخدم زر التصوير." : "تعذّر تشغيل الكاميرا. استخدم زر التصوير أو البحث بالاسم."); });
+}
+function verLine() {
+  var p = h("p", { class: "mu", style: "text-align:center;font-size:12px;margin:18px 0 6px", text: "إصدار اللوحة 8 · الخادم … · صفحة الدعوة …" });
+  aget("ping").then(function (r) { var v = r.ver || 1; p.textContent = "إصدار اللوحة 8 · الخادم " + v + (v < 3 ? " (قديم – حدّثه)" : " ✓") + " · صفحة الدعوة …"; if (v < 3) p.style.color = "#9a2f2f"; fetch(ST.base + (ST.base.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(), { cache: "no-store" }).then(function (x) { return x.text(); }).then(function (t) { var m = /inv-version:(\d+)/.exec(t), iv = m ? +m[1] : 0; p.textContent = "إصدار اللوحة 8 · الخادم " + v + (v < 3 ? " (قديم – حدّثه)" : " ✓") + " · صفحة الدعوة " + iv + (iv < 12 ? " (قديمة – ارفع index.html)" : " ✓"); if (iv < 12) p.style.color = "#9a2f2f"; }).catch(function () {}); }).catch(function () {});
+  return p;
 }
 function stat(cl, n, t) { return h("div", { class: "stat " + cl }, h("b", { text: String(n) }), h("small", { text: t })); }
 function addGuest() {

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head><!-- inv-version:11 --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta property="og:type" content="website">
+<html lang="ar" dir="rtl"><head><!-- inv-version:12 --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta property="og:type" content="website">
 <meta property="og:site_name" content="دعوة زفاف">
 <meta property="og:locale" content="ar_AR">
 <meta property="og:title" content="💍 دعوة زفاف — يسرّنا حضوركم">
@@ -343,7 +343,7 @@ svg stop[stop-color="#efe4cd"] { stop-color: var(--bg-d); }
 .stage[data-intro="photo"]{justify-content:flex-start;background:#111;overflow:hidden;gap:0}
 .stage[data-intro="photo"] .env-wrap,.stage[data-intro="photo"] .alt,.stage[data-intro="photo"] .rule{display:none!important}
 .pimg{position:absolute;inset:0;z-index:0;overflow:hidden;background:#111 center/cover}
-.pimg img{position:absolute;max-width:none;display:block;transition:transform 2.6s cubic-bezier(.5,0,.2,1),filter 2.6s ease;will-change:transform}
+
 .pscr{position:absolute;inset:0;z-index:1;pointer-events:none}
 .stage[data-intro="photo"] .to-line,.stage[data-intro="photo"] .to-name,.stage[data-intro="photo"] .pnm,.stage[data-intro="photo"] .hint,.stage[data-intro="photo"] .open-btn{position:relative;z-index:3;transition:opacity .6s ease}
 .stage[data-intro="photo"] .to-line{margin-top:5vh}
@@ -359,7 +359,29 @@ svg stop[stop-color="#efe4cd"] { stop-color: var(--bg-d); }
 @keyframes ptap{0%{box-shadow:0 0 0 0 rgba(255,225,150,.55)}100%{box-shadow:0 0 0 34px rgba(255,225,150,0)}}
 .stage.opening .ptap{animation:none;opacity:0;transition:opacity .3s}
 .stage[data-intro="photo"].opening .to-line,.stage[data-intro="photo"].opening .to-name,.stage[data-intro="photo"].opening .pnm,.stage[data-intro="photo"].opening .hint,.stage[data-intro="photo"].opening .open-btn{opacity:0}
-.stage[data-intro="photo"].opening .pimg img{transform:scale(var(--zs,1.9));filter:brightness(1.12)}
+.pgrp{position:absolute;perspective:1400px;transition:transform 1.4s cubic-bezier(.65,0,.25,1),opacity .6s;will-change:transform}
+.pl{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block}
+.pff,.pfb{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.pfb{transform:rotateX(180deg)}
+.pfl{position:absolute;inset:0;z-index:6;transform-style:preserve-3d;transition:transform 1.05s cubic-bezier(.45,0,.25,1)}
+.pcw{position:absolute;inset:0;z-index:4}.pdisc{z-index:5;border-radius:50%;filter:blur(calc(var(--u)*7))}.pb{z-index:1}.plin{z-index:2}.pfr{z-index:5}
+.pcard{position:absolute;z-index:4;background:linear-gradient(160deg,#fffdf6,#f6ecd4);border:1px solid rgba(190,150,60,.7);box-shadow:inset 0 0 0 calc(var(--u)*5) #fffdf6,inset 0 0 0 calc(var(--u)*6) rgba(190,150,60,.55),0 calc(var(--u)*6) calc(var(--u)*22) rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--ink,#6b5420);font-family:var(--display);transition:transform 1.25s cubic-bezier(.4,0,.2,1) .75s;gap:calc(var(--u)*7)}
+.pcard i{font-style:normal;font-size:calc(var(--u)*17);opacity:.8}.pcard small{font-size:calc(var(--u)*15);opacity:.85}
+.pcn{display:flex;flex-direction:column;font-size:calc(var(--u)*40);line-height:1.25;font-weight:700}.pcn em{font-style:normal;font-size:calc(var(--u)*22);opacity:.7}.pcr{font-size:calc(var(--u)*18);opacity:.7}
+.stage.opening .pcard{transform:translateY(var(--rise))}
+.stage.opening .pfl{transform:rotateX(180deg)}
+.stage.fd .pfl{z-index:3}
+.stage[data-pk]:not(.opening) .pcard{transition:none}
+.stage.zin .pgrp{transform:translate(var(--zdx),var(--zdy)) scale(var(--zs))}
+.stage[data-pk="env"] .pcard{}
+.pglow{background:radial-gradient(circle at 50% 50%,#fff3cf 0,#e7bd62 30%,#4a3410 75%,#120c03 100%);opacity:0;transition:opacity 1s}
+.stage[data-pk="door"] .pcard,.stage[data-pk="slide"] .pcard{opacity:0;transform:scale(.7);transition:opacity 1s .8s,transform 1.2s .8s}
+.stage[data-pk="door"].opening .pcard,.stage[data-pk="slide"].opening .pcard{opacity:1;transform:scale(1)}
+.stage.opening .pglow{opacity:1}
+.pdl,.pdr{z-index:5;transition:transform 1.9s cubic-bezier(.5,0,.2,1)}
+.stage[data-pk="door"] .pdl{transform-origin:0 50%}.stage[data-pk="door"] .pdr{transform-origin:100% 50%}
+.stage[data-pk="door"].opening .pdl{transform:rotateY(78deg)}.stage[data-pk="door"].opening .pdr{transform:rotateY(-78deg)}
+.stage[data-pk="slide"].opening .pdl{transform:translateX(-62%) rotate(-3deg)}.stage[data-pk="slide"].opening .pdr{transform:translateX(62%) rotate(3deg)}
 .stage[data-intro="photo"].zoom{opacity:0;transition:opacity .9s ease}
 #pbg{position:fixed;inset:0;z-index:0;pointer-events:none;background:center/cover no-repeat;opacity:.16}
 .hero.has-photo{background-size:cover;background-position:center top;min-height:600px}
@@ -935,8 +957,53 @@ window.__boot = function (REMOTE) {
     if (phBg) { var pb = $("#pbg"); pb.style.backgroundImage = 'url("' + phBg + '.jpg")'; pb.hidden = false; }
     if (!phIn) return;
     var d = PH_IN[phIn], W = 768, H = 1376;
-    st.setAttribute("data-intro", "photo"); st.classList.add(d[2] === "l" ? "ph-light" : "ph-dark");
-    var box = document.createElement("div"); box.className = "pimg"; var im = new Image(); im.alt = ""; im.decoding = "async"; box.appendChild(im);
+    var GEO = {
+      "in-ivory": { k: "env", pk: "#e4e0d5", L: 165, R: 600, T: 468, B: 758, rx: 66, ry: 66, lin: "#cfc9bd", ink: "#6b5420" },
+      "in-navy": { k: "env", pk: "#0b1a3a", L: 162, R: 607, T: 480, B: 870, rx: 86, ry: 86, lin: "#061431", ink: "#e9d49a" },
+      "in-burg": { k: "env", pk: "#4e1420", L: 133, R: 635, T: 460, B: 885, rx: 84, ry: 84, lin: "#3b0f15", ink: "#ecd49a" },
+      "in-cream": { k: "env", pk: "#e7e7e2", L: 54, R: 717, T: 400, B: 870, rx: 92, ry: 92, lin: "#cfcfc6", ink: "#6b5420" },
+      "in-blush": { k: "env", pk: "#e5c8c5", L: 113, R: 655, T: 472, B: 870, rx: 138, ry: 82, lin: "#bea3a0", ink: "#7a4b4b" },
+      "in-doors": { k: "door" },
+      "in-emerald": { k: "slide" }
+    }[phIn] || { k: "slide" };
+    st.setAttribute("data-intro", "photo"); st.classList.add(d[2] === "l" ? "ph-light" : "ph-dark"); st.setAttribute("data-pk", GEO.k);
+    var box = document.createElement("div"); box.className = "pimg";
+    var grp = document.createElement("div"); grp.className = "pgrp"; box.appendChild(grp);
+    var URL_ = phIn + ".jpg";
+    function pc(x, y) { return (x / W * 100).toFixed(3) + "% " + (y / H * 100).toFixed(3) + "%"; }
+    function poly(pts) { return "polygon(" + pts.map(function (p) { return pc(p[0], p[1]); }).join(",") + ")"; }
+    function layer(cls, clip) { var e = document.createElement("img"); e.className = "pl " + cls; e.alt = ""; e.decoding = "async"; e.src = URL_; if (clip) e.style.clipPath = e.style.webkitClipPath = clip; grp.appendChild(e); return e; }
+    var im = null, card = document.createElement("div"); card.className = "pcard";
+    card.innerHTML = '<i class="pc1">بسم الله الرحمن الرحيم</i><small>تتشرف بدعوتكم لحضور حفل زفاف</small><b class="pcn"></b><span class="pcr">❖</span>';
+    card.querySelector(".pcn").innerHTML = ""; var gn = document.createElement("span"), an = document.createElement("em"), bn = document.createElement("span");
+    gn.textContent = CONFIG.groom || ""; an.textContent = "&"; bn.textContent = CONFIG.bride || ""; var pcn = card.querySelector(".pcn"); pcn.appendChild(gn); pcn.appendChild(an); pcn.appendChild(bn);
+    var cw, ch, rise, ccx, ccy;
+    if (GEO.k === "env") {
+      var sx = d[0] * W, sy = d[1] * H, ay = sy + 10, g = GEO;
+      function edgeHit(x0, y0, x1, y1) { var best = [x1, y1]; for (var t = 0; t <= 1.0001; t += .005) { var x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, u = (x - sx) / g.rx, v = (y - sy) / g.ry; if (u * u + v * v <= 1) { best = [x, y]; break; } } return best; }
+      var pr = edgeHit(g.R, g.T, sx, ay), pl = edgeHit(g.L, g.T, sx, ay), arc = [], i;
+      for (i = 0; i <= 16; i++) { var an2 = i / 16 * Math.PI; arc.push([sx + g.rx * Math.cos(an2) * 1.0, sy + g.ry * Math.sin(an2)]); }
+      var flapPts = [[g.L, g.T], [g.R, g.T], pr].concat(arc).concat([pl]);
+      var frontPts = [[g.L, g.T], pl].concat(arc.slice().reverse()).concat([pr, [g.R, g.T], [g.R, g.B], [g.L, g.B]]);
+      layer("pb", null);
+      var lin = document.createElement("div"); lin.className = "pl plin"; lin.style.background = g.lin; lin.style.clipPath = lin.style.webkitClipPath = poly(flapPts); grp.appendChild(lin);
+      cw = (g.R - g.L) * .8; ch = cw * 1.05; var ctop = g.T + (g.B - g.T) * .12; rise = ch * .66;
+      card.style.cssText = "left:" + ((g.L + (g.R - g.L) * .1) / W * 100) + "%;top:" + (ctop / H * 100) + "%;width:" + (cw / W * 100) + "%;height:" + (ch / H * 100) + "%;--ink:" + g.ink + ";--rise:" + (-rise / ch * 100) + "%";
+      var pcw = document.createElement("div"); pcw.className = "pcw"; pcw.style.clipPath = pcw.style.webkitClipPath = "inset(0 0 " + ((H - g.B) / H * 100) + "% 0)"; pcw.appendChild(card); grp.appendChild(pcw);
+      layer("pfr", poly(frontPts));
+      var dsc = document.createElement("div"); dsc.className = "pl pdisc"; dsc.style.cssText = "inset:auto;width:" + (g.rx * 2 + 4) / W * 100 + "%;height:" + (g.ry * 2 + 4) / H * 100 + "%;left:" + (sx - g.rx - 2) / W * 100 + "%;top:" + (sy - g.ry - 2) / H * 100 + "%;background:" + g.pk; grp.appendChild(dsc);
+      var fl = document.createElement("div"); fl.className = "pfl"; fl.style.transformOrigin = "50% " + (g.T / H * 100) + "%"; grp.style.perspectiveOrigin = "50% " + (g.T / H * 100) + "%";
+      var ff = document.createElement("img"); ff.className = "pl pff"; ff.alt = ""; ff.src = URL_; ff.style.clipPath = ff.style.webkitClipPath = poly(flapPts);
+      var fb = document.createElement("div"); fb.className = "pl pfb"; fb.style.background = "linear-gradient(180deg," + g.lin + ",rgba(255,255,255,.0)),#" + "d9d3c6"; fb.style.background = g.lin; fb.style.filter = "brightness(1.18)"; fb.style.clipPath = fb.style.webkitClipPath = poly(flapPts);
+      fl.appendChild(ff); fl.appendChild(fb); grp.appendChild(fl);
+      ccx = (g.L + g.R) / 2; ccy = ctop - rise + ch / 2; im = grp.querySelector(".pb");
+    } else {
+      var glow = document.createElement("div"); glow.className = "pl pglow"; grp.appendChild(glow);
+      cw = W * .66; ch = cw * 1.12; ccx = W / 2; ccy = H / 2; rise = 0;
+      card.style.cssText = "left:" + ((W - cw) / 2 / W * 100) + "%;top:" + ((H / 2 - ch / 2) / H * 100) + "%;width:" + (cw / W * 100) + "%;height:" + (ch / H * 100) + "%;--ink:#6b5420;--rise:0%";
+      grp.appendChild(card);
+      var hl = layer("pdl", "inset(0 50% 0 0)"), hr = layer("pdr", "inset(0 0 0 50%)"); im = hl;
+    }
     var scr = document.createElement("div"); scr.className = "pscr";
     scr.style.background = d[2] === "l" ? "linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0) 28%,rgba(0,0,0,0) 62%,rgba(0,0,0,.6))" : "linear-gradient(180deg,rgba(255,250,238,.7),rgba(255,250,238,0) 28%,rgba(255,250,238,0) 62%,rgba(255,250,238,.75))";
     var tap = document.createElement("button"); tap.type = "button"; tap.className = "ptap"; tap.setAttribute("aria-label", "افتح الدعوة");
@@ -944,12 +1011,17 @@ window.__boot = function (REMOTE) {
     st.insertBefore(box, st.firstChild); st.insertBefore(scr, box.nextSibling); st.appendChild(tap); st.insertBefore(nm, $("#hint"));
     function lay() {
       var vw = st.clientWidth || innerWidth, vh = st.clientHeight || innerHeight, sc = Math.max(vw / W, vh / H), w = W * sc, h = H * sc, ox = (vw - w) / 2, oy = (vh - h) / 2;
-      im.style.width = w + "px"; im.style.height = h + "px"; im.style.left = ox + "px"; im.style.top = oy + "px";
-      var px = ox + d[0] * w, py = oy + d[1] * h; tap.style.left = px + "px"; tap.style.top = py + "px"; im.style.transformOrigin = (d[0] * 100) + "% " + (d[1] * 100) + "%";
-      st.style.setProperty("--zs", Math.max(1.9, Math.min(3.2, 1.4 + 160 / Math.min(vw, 420) * 1.0)));
+      grp.style.width = w + "px"; grp.style.height = h + "px"; grp.style.left = ox + "px"; grp.style.top = oy + "px"; grp.style.setProperty("--u", sc + "px");
+      var px = ox + d[0] * w, py = oy + d[1] * h; tap.style.left = px + "px"; tap.style.top = py + "px";
+      var z = Math.max(1.2, Math.min(4, (vw * .9) / (cw * sc)));
+      grp.style.transformOrigin = (ccx / W * 100) + "% " + (ccy / H * 100) + "%";
+      st.style.setProperty("--zs", z.toFixed(3));
+      st.style.setProperty("--zdx", (vw / 2 - (ox + ccx * sc)).toFixed(1) + "px"); st.style.setProperty("--zdy", (vh * .46 - (oy + ccy * sc)).toFixed(1) + "px");
     }
-    im.onload = function () { lay(); im.style.opacity = 1; }; im.onerror = function () { st.setAttribute("data-intro", "envelope"); st.classList.remove("ph-light", "ph-dark"); box.remove(); scr.remove(); tap.remove(); nm.remove(); phInFail = true; };
-    var phInFail = false; im.style.opacity = 0; im.src = phIn + ".jpg"; lay(); addEventListener("resize", lay);
+    var phInFail = false;
+    im.onload = function () { lay(); grp.style.opacity = 1; };
+    im.onerror = function () { phInFail = true; st.setAttribute("data-intro", "envelope"); st.removeAttribute("data-pk"); st.classList.remove("ph-light", "ph-dark"); box.remove(); scr.remove(); tap.remove(); nm.remove(); };
+    grp.style.opacity = 0; lay(); addEventListener("resize", lay); if (im.complete) im.onload();
     tap.addEventListener("click", function () { openEnv(); });
     $("#hint").textContent = "المس الختم لفتح الدعوة";
   })();
@@ -969,6 +1041,7 @@ window.__boot = function (REMOTE) {
     if (reduce) { reveal(); return; }
     st.classList.add("opening");
     setTimeout(function () { $("#flap").classList.add("back-z"); }, 700);
+    if (st.getAttribute("data-pk")) { setTimeout(function () { st.classList.add("fd"); }, 1000); setTimeout(function () { st.classList.add("zin"); }, 2150); setTimeout(function () { st.classList.add("zoom"); }, 3000); setTimeout(reveal, 3800); return; }
     if (introFx) { setTimeout(function () { st.classList.add("zoom"); }, 2200); setTimeout(reveal, 3000); return; }
     setTimeout(function () { st.classList.add("zoom"); }, 2300);
     setTimeout(reveal, 3000);
